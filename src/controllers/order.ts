@@ -110,10 +110,27 @@ export const getOrderById = async (req: Request, res: Response) => {
   res.json(order);
 };
 
-export const EditOrderStatus = async (req: Request, res: Response) => {
+// export const EditOrderStatus = async (req: Request, res: Response) => {};
+
+export const listAllOrders = async (req: Request, res: Response) => {
+  let whereClause = {};
+  const status = req.query.status;
+  if (status) {
+    whereClause = {
+      status,
+    };
+  }
+  const orders = await prismaClient.order.findMany({
+    where: whereClause,
+    skip: +req.query.skip! || 0,
+    take: 5,
+  });
+  res.json(orders);
+};
+
+export const changeStatus = async (req: Request, res: Response) => {
   const order = await prismaClient.order.update({
     where: {
-      userId: req.user?.id,
       id: req.params.id,
     },
     data: {
@@ -121,4 +138,21 @@ export const EditOrderStatus = async (req: Request, res: Response) => {
     },
   });
   res.json(order);
+};
+
+export const listUserOrders = async (req: Request, res: Response) => {
+  let whereClause: any = { userId: req.params.id };
+  const status = req.params.status;
+  if (status) {
+    whereClause = {
+      ...whereClause,
+      status,
+    };
+  }
+  const orders = await prismaClient.order.findMany({
+    where: whereClause,
+    skip: +req.query.skip! || 0,
+    take: 5,
+  });
+  res.json(orders);
 };
