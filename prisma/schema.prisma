@@ -13,19 +13,148 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Role{
+enum Role {
   ADMIN
   USER
 }
 
+enum AddressType {
+  HOME
+  WORK
+  COMPANY
+  HOSPITAL
+  FACTORY
+  OTHER
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
 model User{
-  id Int @id @default(autoincrement())
+  id String @id @default(uuid())
   name String
   email String @unique
   password String
   role Role @default(USER)
+  defaultShippingAddress String?
+  defaultBillingAddress String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  products Product[]
+  addresses Address[]
+  carts Cart[]
+  orders Order[]
+
   @@map("users")
+}
+
+model Product{
+  id String @id @default(uuid())
+  name String
+  description String @db.Text
+  price Decimal
+  tags String
+  stock Int
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId String
+  user User @relation(fields: [userId],references: [id])
+
+  cartItems CartItem[]
+  orderItems OrderItem[]
+
+  @@map("products")
+}
+
+model Address{
+  id String @id @default(uuid())
+  street String
+  city String
+  state String?
+  postelCode String?
+  country String
+  type AddressType @default(HOME)
+  notes String?
+  latitude Float?
+  longitude Float?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId String
+  user User @relation(fields: [userId], references: [id])
+
+  billingOrders Order[] @relation("BillingAddress")
+
+
+  @@map("adresses")
+}
+
+model Cart{
+  id String @id @default(uuid())
+  userId String
+  user User @relation(fields: [userId],references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  cartItems CartItem[]
+}
+
+model CartItem{
+  id String @id @default(uuid())
+  quantity Int
+  productId String
+  cartId String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  product Product @relation(fields: [productId], references: [id])
+  cart Cart @relation(fields: [cartId], references: [id])
+
+}
+
+model Order{
+  id String @id @default(uuid())
+  // orderNumber String @unique
+  status OrderStatus @default(PENDING)
+  total Decimal
+  userId String
+  shippingAddress String?
+  billingAddressId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+  billingAddress Address? @relation("BillingAddress", fields: [billingAddressId], references: [id])
+  orderItems OrderItem[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id String @id @default(uuid())
+  orderId String
+  productId String
+  quantity Int
+  price Decimal
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  order Order @relation(fields: [orderId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+
+  @@map("order_items")
 }

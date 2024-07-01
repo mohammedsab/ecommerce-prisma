@@ -1,7 +1,7 @@
-import { ErrorCode, HtppException } from "./root";
+import { HtppException } from "./root";
 
 export class BadRequestsException extends HtppException {
-  constructor(message: string, errorCode: ErrorCode) {
-    super(message, errorCode, 400, null);
+  constructor(message: string, errorCode: number, errors?: any) {
+    super(message, errorCode, 400, errors);
   }
 }

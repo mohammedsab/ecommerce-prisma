@@ -15,7 +15,7 @@ export const signup = async (
   next: NextFunction
 ) => {
   SignUpSchema.parse(req.body);
-  const { email, password, name } = req.body;
+  const { email, password, name, role } = req.body;
 
   let user = await prismaClient.user.findFirst({ where: { email } });
   if (user) {
@@ -30,6 +30,7 @@ export const signup = async (
       name,
       email,
       password: hashSync(password, 10),
+      role,
     },
   });
 
@@ -39,7 +40,9 @@ export const signup = async (
 export const login = async (req: Request, res: Response) => {
   const { email, password } = req.body;
 
-  let user = await prismaClient.user.findFirst({ where: { email } });
+  let user = await prismaClient.user.findFirst({
+    where: { email },
+  });
   if (!user) {
     throw new NotFoundException("User not found!", ErrorCode.USER_NOT_FOUND);
   }
